@@ -13,6 +13,7 @@ PAPER_SLIDES_PLANNING_PROMPT = """Organize the document into {min_pages}-{max_pa
 - **id**: Slide identifier
 - **title**: A concise title suitable for this slide, such as paper title, method name, or topic name
 - **content**: The main text for this slide. This is the MOST IMPORTANT field. Requirements:
+  - **LANGUAGE**: Generate all content in {target_language}.
   - **DETAILED METHOD DESCRIPTION**: For method slides, describe each step/component in detail. If there are multiple steps, explain each one (what it does, how it works, what's the input/output). Don't compress into one vague sentence.
   - **PRESERVE KEY FORMULAS**: If the source has formulas, include 1-2 relevant ones in LaTeX (\\( ... \\) or \\[ ... \\]) with variable meanings.
   - **PRESERVE SPECIFIC NUMBERS**: Key percentages, metrics, dataset sizes, and comparison values.
@@ -87,10 +88,11 @@ Distribute content across {min_pages}-{max_pages} slides covering these areas:
 ```
 
 ## CRITICAL REQUIREMENTS
-1. **MATHEMATICAL FORMULAS**: If the source contains formulas, include at least 1-2 key/representative formulas in Method slides using LaTeX notation. In JSON, escape backslashes as \\\\ (e.g., \\\\( \\\\mathcal{{X}} \\\\)).
-2. **MINIMUM CONTENT LENGTH**: Each slide content should be at least 150-200 words (except title). Avoid overly brief summaries.
-3. **SPECIFIC NUMBERS**: Use precise values from source.
-4. **TABLE DATA**: Extract tables with actual numerical values from the original.
+1. **LANGUAGE**: All generated text MUST be in {target_language}.
+2. **MATHEMATICAL FORMULAS**: If the source contains formulas, include at least 1-2 key/representative formulas in Method slides using LaTeX notation. In JSON, escape backslashes as \\\\ (e.g., \\\\( \\\\mathcal{{X}} \\\\)).
+3. **MINIMUM CONTENT LENGTH**: Each slide content should be at least 150-200 words (except title). Avoid overly brief summaries.
+4. **SPECIFIC NUMBERS**: Use precise values from source.
+5. **TABLE DATA**: Extract tables with actual numerical values from the original.
 """
 
 # Paper poster density guidelines
@@ -128,6 +130,7 @@ PAPER_POSTER_PLANNING_PROMPT = """Organize the document into poster sections by 
 - **id**: Section identifier
 - **title**: A concise title for this section, such as paper title, method name, or topic
 - **content**: The main text for this section. This is the MOST IMPORTANT field. Requirements:
+  - **LANGUAGE**: Generate all content in {target_language}.
   - **DETAILED METHOD DESCRIPTION**: For method section, describe each step/component in detail. If there are multiple steps, explain each one separately.
   - **PRESERVE KEY FORMULAS**: If the source has formulas, include 1-2 relevant ones in LaTeX (\\( ... \\)) with variable meanings.
   - **PRESERVE SPECIFIC NUMBERS**: Key percentages, metrics, dataset sizes, comparison values.
@@ -194,10 +197,11 @@ PAPER_POSTER_PLANNING_PROMPT = """Organize the document into poster sections by 
 ```
 
 ## CRITICAL REQUIREMENTS
-1. **MATHEMATICAL FORMULAS**: If the source contains formulas, include at least 1-2 key/representative formulas in Method section using LaTeX. In JSON, escape backslashes as \\\\ (e.g., \\\\( \\\\mathcal{{X}} \\\\)).
-2. **MINIMUM CONTENT LENGTH**: Each section content should be at least 100-150 words (except title). Avoid overly brief summaries.
-3. **SPECIFIC NUMBERS**: Use precise values from source.
-4. **TABLE DATA**: Extract tables with actual numerical values from the original.
+1. **LANGUAGE**: All generated text MUST be in {target_language}.
+2. **MATHEMATICAL FORMULAS**: If the source contains formulas, include at least 1-2 key/representative formulas in Method section using LaTeX. In JSON, escape backslashes as \\\\ (e.g., \\\\( \\\\mathcal{{X}} \\\\)).
+3. **MINIMUM CONTENT LENGTH**: Each section content should be at least 100-150 words (except title). Avoid overly brief summaries.
+4. **SPECIFIC NUMBERS**: Use precise values from source.
+5. **TABLE DATA**: Extract tables with actual numerical values from the original.
 """
 
 # General document prompts (no fixed academic structure)
@@ -210,6 +214,7 @@ GENERAL_SLIDES_PLANNING_PROMPT = """Organize the document into {min_pages}-{max_
 - **id**: Slide identifier
 - **title**: A concise title for this slide, such as document title or topic name
 - **content**: The main text for this slide. This is the MOST IMPORTANT field. Requirements:
+  - **LANGUAGE**: Generate all content in {target_language}.
   - **DETAILED DESCRIPTIONS**: If there are multiple points/steps, describe each one. Don't compress into vague summaries.
   - **PRESERVE KEY FORMULAS**: If present, include relevant mathematical or technical formulas.
   - **PRESERVE SPECIFIC NUMBERS**: Key percentages, statistics, dates, quantities, and comparison values.
@@ -270,10 +275,11 @@ Distribute content across {min_pages}-{max_pages} slides. Identify the document'
 ```
 
 ## CRITICAL REQUIREMENTS
-1. **FORMULAS**: If present, include any formulas or technical expressions exactly as they appear.
-2. **MINIMUM CONTENT LENGTH**: Each slide content should be at least 150-200 words (except title). Avoid overly brief summaries.
-3. **SPECIFIC NUMBERS**: Use precise values from source.
-4. **TABLE DATA**: Extract tables with actual numerical values from the original.
+1. **LANGUAGE**: All generated text MUST be in {target_language}.
+2. **FORMULAS**: If present, include any formulas or technical expressions exactly as they appear.
+3. **MINIMUM CONTENT LENGTH**: Each slide content should be at least 150-200 words (except title). Avoid overly brief summaries.
+4. **SPECIFIC NUMBERS**: Use precise values from source.
+5. **TABLE DATA**: Extract tables with actual numerical values from the original.
 """
 
 # General poster density guidelines
@@ -317,6 +323,7 @@ GENERAL_POSTER_PLANNING_PROMPT = """Organize the document into poster sections b
 - **id**: Section identifier
 - **title**: A concise title for this section, such as document title or topic name
 - **content**: The main text for this section. This is the MOST IMPORTANT field. Requirements:
+  - **LANGUAGE**: Generate all content in {target_language}.
   - **DETAILED DESCRIPTIONS**: If there are multiple points/steps, describe each one. Don't compress into vague summaries.
   - **PRESERVE KEY FORMULAS**: If present, include relevant mathematical or technical formulas.
   - **PRESERVE SPECIFIC NUMBERS**: Key percentages, statistics, dates, quantities, and comparison values.
@@ -374,8 +381,132 @@ Organize content into logical sections based on the document's natural structure
 ```
 
 ## CRITICAL REQUIREMENTS
-1. **FORMULAS**: If present, include any formulas or technical expressions exactly as they appear.
-2. **MINIMUM CONTENT LENGTH**: Each section content should be at least 100-150 words (except title). Avoid overly brief summaries.
-3. **SPECIFIC NUMBERS**: Use precise values from source.
-4. **TABLE DATA**: Extract tables with actual numerical values from the original.
+1. **LANGUAGE**: All generated text MUST be in {target_language}.
+2. **FORMULAS**: If present, include any formulas or technical expressions exactly as they appear.
+3. **MINIMUM CONTENT LENGTH**: Each section content should be at least 100-150 words (except title). Avoid overly brief summaries.
+4. **SPECIFIC NUMBERS**: Use precise values from source.
+5. **TABLE DATA**: Extract tables with actual numerical values from the original.
+"""
+
+# -----------------------------------------------------------------------------
+# New Two-Step Planning Prompts (Robust Mode)
+# -----------------------------------------------------------------------------
+
+PAPER_OUTLINE_PROMPT = """Create an outline for {min_pages}-{max_pages} slides based on the document summary below.
+Focus ONLY on the structure and high-level flow.
+
+## Document Summary
+{summary}
+
+## Outline Guidelines
+1. **Title/Cover**: Paper title, authors.
+2. **Background**: Research problem, motivation.
+3. **Method**: Key components, steps (dedicate multiple slides if complex).
+4. **Experiments**: Datasets, main results, comparisons.
+5. **Conclusion**: Contributions, key findings.
+
+## CRITICAL REQUIREMENTS
+1. **LANGUAGE**: The outline titles and descriptions MUST be in {target_language}.
+
+## Output Format (JSON)
+```json
+{{
+  "slides": [
+    {{
+      "id": "slide_01",
+      "title": "[Slide Title]",
+      "description": "[Brief description of what this slide should cover (1-2 sentences)]",
+      "suggested_assets": ["Figure 1", "Table 1"]
+    }},
+    ...
+  ]
+}}
+```
+"""
+
+PAPER_SLIDE_CONTENT_PROMPT = """Write the detailed content for the following slide.
+
+## Slide Info
+**Title**: {title}
+**Goal**: {description}
+
+## Document Context
+{summary}
+{assets_section}
+
+## Content Requirements
+- **LANGUAGE**: Generate all content in {target_language}.
+- **DETAILED TEXT**: Write 150-200 words explaining the topic deeply.
+- **SPECIFICITY**: Use exact numbers, metrics, and dates from the context.
+- **FORMULAS**: Include relevant LaTeX formulas (e.g., \\( x^2 \\)) if applicable.
+- **ASSETS**: Select relevant tables/figures from the list below if they fit.
+
+## Output Format (JSON)
+```json
+{{
+  "content": "[Full slide text content...]",
+  "tables": [
+    {{"table_id": "Table X", "extract": "<table>...</table>", "focus": "..."}}
+  ],
+  "figures": [
+    {{"figure_id": "Figure Y", "focus": "..."}}
+  ]
+}}
+```
+"""
+
+GENERAL_OUTLINE_PROMPT = """Create an outline for {min_pages}-{max_pages} slides based on the content below.
+Focus ONLY on the structure and high-level flow.
+
+## Content
+{summary}
+
+## Outline Guidelines
+1. **Title/Cover**: Document title.
+2. **Main Topics**: Break down the content into logical sections (one slide per major point).
+3. **Conclusion**: Summary of key takeaways.
+
+## CRITICAL REQUIREMENTS
+1. **LANGUAGE**: The outline titles and descriptions MUST be in {target_language}.
+
+## Output Format (JSON)
+```json
+{{
+  "slides": [
+    {{
+      "id": "slide_01",
+      "title": "[Slide Title]",
+      "description": "[Brief description of what this slide should cover]",
+      "suggested_assets": []
+    }},
+    ...
+  ]
+}}
+```
+"""
+
+GENERAL_SLIDE_CONTENT_PROMPT = """Write the detailed content for the following slide.
+
+## Slide Info
+**Title**: {title}
+**Goal**: {description}
+
+## Document Context
+{summary}
+{assets_section}
+
+## Content Requirements
+- **LANGUAGE**: Generate all content in {target_language}.
+- **DETAILED TEXT**: Write 150-200 words explaining the topic deeply.
+- **SPECIFICITY**: Use exact numbers, metrics, and facts.
+- **ASSETS**: Select relevant tables/figures from the list below if they fit.
+
+## Output Format (JSON)
+```json
+{{
+  "content": "[Full slide text content...]",
+  "tables": [],
+  "figures": []
+}}
+```
 """

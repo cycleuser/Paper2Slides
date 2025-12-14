@@ -54,6 +54,7 @@ class GenerationConfig:
         slides_length: Page count level for slides (short/medium/long)
         style: Style type (academic/doraemon/custom)
         custom_style: User's custom style description (used when style=custom)
+        target_language: Target language for generation (default: English)
     """
     output_type: OutputType = OutputType.POSTER
     
@@ -67,6 +68,9 @@ class GenerationConfig:
     style: StyleType = StyleType.ACADEMIC
     custom_style: Optional[str] = None
     
+    # Language
+    target_language: str = "English"
+    
     def get_page_range(self) -> tuple[int, int]:
         """Get page count range for slides."""
         return SLIDES_PAGE_RANGES.get(self.slides_length.value, (8, 12))
@@ -78,6 +82,7 @@ class GenerationConfig:
             "slides_length": self.slides_length.value,
             "style": self.style.value,
             "custom_style": self.custom_style,
+            "target_language": self.target_language,
         }
 
 

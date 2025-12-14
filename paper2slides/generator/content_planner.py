@@ -6,8 +6,9 @@ import base64
 import re
 from pathlib import Path
 from dataclasses import dataclass, field
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from openai import OpenAI
+import logging
 
 from .config import GenerationInput, OutputType
 from ..summary import FigureInfo, TableInfo
@@ -18,8 +19,13 @@ from ..prompts.content_planning import (
     GENERAL_SLIDES_PLANNING_PROMPT,
     GENERAL_POSTER_PLANNING_PROMPT,
     GENERAL_POSTER_DENSITY_GUIDELINES,
+    PAPER_OUTLINE_PROMPT,
+    PAPER_SLIDE_CONTENT_PROMPT,
+    GENERAL_OUTLINE_PROMPT,
+    GENERAL_SLIDE_CONTENT_PROMPT,
 )
 
+logger = logging.getLogger(__name__)
 
 @dataclass
 class TableRef:
@@ -175,24 +181,80 @@ class ContentPlanner:
         tables_md: str,
         figure_images: List[Dict],
     ) -> List[Section]:
-        """Plan slides sections."""
+        """Plan slides sections using robust two-step process."""
         min_pages, max_pages = gen_input.config.get_page_range()
+        target_language = gen_input.config.target_language
         
-        # Select prompt template based on content type
-        template = PAPER_SLIDES_PLANNING_PROMPT if gen_input.is_paper() else GENERAL_SLIDES_PLANNING_PROMPT
+        # 1. Generate Outline
+        logger.info(f"Generating slides outline (Target Language: {target_language})...")
+        outline_prompt_template = PAPER_OUTLINE_PROMPT if gen_input.is_paper() else GENERAL_OUTLINE_PROMPT
         
-        # Build assets section based on available tables/figures
-        assets_section = self._build_assets_section(tables_md, bool(figure_images))
-        
-        prompt = template.format(
+        prompt = outline_prompt_template.format(
             min_pages=min_pages,
             max_pages=max_pages,
-            summary=self._truncate(summary, 10000),
-            assets_section=assets_section,
+            summary=self._truncate(summary, 12000), 
+            target_language=target_language,
         )
         
-        result = self._call_multimodal_llm(prompt, figure_images)
-        return self._parse_sections(result, is_slides=True)
+        outline_response = self._call_multimodal_llm(prompt, figure_images)
+        outline_items = self._parse_outline(outline_response)
+        
+        if not outline_items:
+            logger.warning("Outline generation failed, using fallback.")
+            return self._fallback_sections()
+            
+        logger.info(f"Generated outline with {len(outline_items)} slides. Starting detailed content generation...")
+        
+        # 2. Generate Content for each slide
+        sections = []
+        assets_section = self._build_assets_section(tables_md, bool(figure_images))
+        content_prompt_template = PAPER_SLIDE_CONTENT_PROMPT if gen_input.is_paper() else GENERAL_SLIDE_CONTENT_PROMPT
+        
+        total = len(outline_items)
+        for idx, item in enumerate(outline_items):
+            logger.info(f"Generating content for slide {idx+1}/{total}: {item.get('title', 'Untitled')}")
+            
+            # Determine section type
+            if idx == 0:
+                section_type = "opening"
+            elif idx == total - 1:
+                section_type = "ending"
+            else:
+                section_type = "content"
+                
+            # Prepare prompt for this specific slide
+            slide_prompt = content_prompt_template.format(
+                title=item.get("title", ""),
+                description=item.get("description", ""),
+                summary=self._truncate(summary, 8000), # Truncate to save tokens, focus is key
+                assets_section=assets_section,
+                target_language=target_language,
+            )
+            
+            # Call LLM for this slide
+            try:
+                slide_response = self._call_multimodal_llm(slide_prompt, figure_images)
+                slide_data = self._parse_slide_content(slide_response)
+                
+                # Merge outline info with generated content
+                sections.append(Section(
+                    id=item.get("id", f"slide_{idx+1:02d}"),
+                    title=item.get("title", ""),
+                    section_type=section_type,
+                    content=slide_data.get("content", ""),
+                    tables=slide_data.get("tables", []),
+                    figures=slide_data.get("figures", [])
+                ))
+            except Exception as e:
+                logger.error(f"Failed to generate content for slide {idx+1}: {e}")
+                sections.append(Section(
+                    id=item.get("id", f"slide_{idx+1:02d}"),
+                    title=item.get("title", ""),
+                    section_type=section_type,
+                    content=item.get("description", "") + "\n\n(Note: Detailed content generation failed for this slide.)",
+                ))
+                
+        return sections
     
     def _plan_poster(
         self,
@@ -203,6 +265,7 @@ class ContentPlanner:
     ) -> List[Section]:
         """Plan poster sections."""
         density = gen_input.config.poster_density.value
+        target_language = gen_input.config.target_language
         
         # Select density guidelines and prompt template based on content type
         if gen_input.is_paper():
@@ -221,6 +284,7 @@ class ContentPlanner:
             density_guidelines=density_guidelines,
             summary=self._truncate(summary, 10000),
             assets_section=assets_section,
+            target_language=target_language,
         )
         
         result = self._call_multimodal_llm(prompt, figure_images)
@@ -253,8 +317,6 @@ class ContentPlanner:
     
     def _call_multimodal_llm(self, text_prompt: str, figure_images: List[Dict]) -> str:
         """Call multimodal LLM with text and images inline."""
-        import logging
-        logger = logging.getLogger(__name__)
         
         MARKER = "[FIGURE_IMAGES]"
         content = []
@@ -307,62 +369,93 @@ class ContentPlanner:
             logger.error(f"Model: {self.model}, Content items: {len(content)}")
             raise
     
-    def _parse_sections(self, llm_response: str, is_slides: bool = True) -> List[Section]:
-        """Parse LLM response into Section objects.
-        
-        Args:
-            llm_response: The LLM response containing JSON
-            is_slides: If True, auto-determine section_type based on position (opening/content/ending).
-                       If False (poster), all sections are "content".
-        """
-        # Debug: Log the raw LLM response
-        import logging
-        logger = logging.getLogger(__name__)
-        logger.info("=" * 80)
-        logger.info("LLM Response for Content Planning:")
-        logger.info("-" * 80)
-        logger.info(llm_response[:2000])  # Log first 2000 chars
-        if len(llm_response) > 2000:
-            logger.info(f"... (truncated, total length: {len(llm_response)} chars)")
-        logger.info("=" * 80)
-        
-        # Extract JSON
-        json_match = re.search(r'```json\s*(.*?)\s*```', llm_response, re.DOTALL)
+    def _extract_json(self, text: str) -> str:
+        """Extract JSON string from text."""
+        json_match = re.search(r'```json\s*(.*?)\s*```', text, re.DOTALL)
         if json_match:
-            json_str = json_match.group(1)
-            logger.info("Found JSON in code block")
-        else:
-            logger.warning("No JSON code block found, trying to extract raw JSON")
-            json_match = re.search(r'\{.*\}', llm_response, re.DOTALL)
-            json_str = json_match.group(0) if json_match else "{}"
-            if not json_match:
-                logger.error("No JSON found in LLM response at all!")
+            return json_match.group(1)
         
-        # Clean up invalid escape sequences before parsing
-        # Replace invalid escape sequences with safe versions
-        def fix_invalid_escapes(s):
-            """Fix common invalid escape sequences in JSON strings."""
-            # Find all escape sequences
-            result = []
-            i = 0
-            while i < len(s):
-                if s[i] == '\\' and i + 1 < len(s):
-                    next_char = s[i + 1]
-                    # Valid JSON escape sequences: " \ / b f n r t u
-                    if next_char in ['"', '\\', '/', 'b', 'f', 'n', 'r', 't', 'u']:
-                        result.append(s[i:i+2])
-                        i += 2
-                    else:
-                        # Invalid escape sequence, escape the backslash itself
-                        result.append('\\\\')
-                        result.append(next_char)
-                        i += 2
+        json_match = re.search(r'\{.*\}', text, re.DOTALL)
+        if json_match:
+            return json_match.group(0)
+            
+        return "{}"
+
+    def _fix_invalid_escapes(self, s: str) -> str:
+        """Fix common invalid escape sequences in JSON strings."""
+        result = []
+        i = 0
+        while i < len(s):
+            if s[i] == '\\' and i + 1 < len(s):
+                next_char = s[i + 1]
+                # Valid JSON escape sequences: " \ / b f n r t u
+                if next_char in ['"', '\\', '/', 'b', 'f', 'n', 'r', 't', 'u']:
+                    result.append(s[i:i+2])
+                    i += 2
                 else:
-                    result.append(s[i])
-                    i += 1
-            return ''.join(result)
+                    # Invalid escape sequence, escape the backslash itself
+                    result.append('\\\\')
+                    result.append(next_char)
+                    i += 2
+            else:
+                result.append(s[i])
+                i += 1
+        return ''.join(result)
+
+    def _parse_outline(self, llm_response: str) -> List[Dict]:
+        """Parse outline JSON."""
+        json_str = self._extract_json(llm_response)
+        json_str = self._fix_invalid_escapes(json_str)
         
-        json_str = fix_invalid_escapes(json_str)
+        try:
+            data = json.loads(json_str)
+            return data.get("slides", [])
+        except Exception as e:
+            logger.error(f"Outline parsing failed: {e}")
+            return []
+
+    def _parse_slide_content(self, llm_response: str) -> Dict:
+        """Parse slide content JSON."""
+        json_str = self._extract_json(llm_response)
+        json_str = self._fix_invalid_escapes(json_str)
+        
+        try:
+            data = json.loads(json_str)
+            
+            # Parse tables
+            tables = []
+            for t in data.get("tables", []):
+                tables.append(TableRef(
+                    table_id=t.get("table_id", ""),
+                    extract=t.get("extract", ""),
+                    focus=t.get("focus", ""),
+                ))
+            
+            # Parse figures
+            figures = []
+            for f in data.get("figures", []):
+                figures.append(FigureRef(
+                    figure_id=f.get("figure_id", ""),
+                    focus=f.get("focus", ""),
+                ))
+                
+            return {
+                "content": data.get("content", ""),
+                "tables": tables,
+                "figures": figures
+            }
+        except Exception as e:
+            logger.error(f"Slide content parsing failed: {e}")
+            return {
+                "content": "Error parsing content.",
+                "tables": [],
+                "figures": []
+            }
+
+    def _parse_sections(self, llm_response: str, is_slides: bool = True) -> List[Section]:
+        """Legacy parser for full plan (used by Poster and legacy slides)."""
+        json_str = self._extract_json(llm_response)
+        json_str = self._fix_invalid_escapes(json_str)
         
         try:
             data = json.loads(json_str)
@@ -411,7 +504,6 @@ class ContentPlanner:
             
         except json.JSONDecodeError as e:
             logger.error(f"JSON parsing failed: {e}")
-            logger.error(f"Failed to parse JSON string (first 500 chars): {json_str[:500]}")
             logger.warning("Using fallback sections due to JSON parse error")
             return self._fallback_sections()
         except Exception as e:

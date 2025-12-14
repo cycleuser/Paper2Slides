@@ -83,8 +83,11 @@ IMAGE_GEN_BASE_URL=
 ### 3. 运行
 
 ```bash
-# 生成 HTML 幻灯片
+# 生成 HTML 幻灯片 (默认为英文)
 python -m paper2slides --input paper.pdf --output slides
+
+# 生成中文幻灯片 (自动翻译)
+python -m paper2slides --input paper.pdf --output slides --language "Chinese"
 ```
 
 ---
@@ -92,10 +95,13 @@ python -m paper2slides --input paper.pdf --output slides
 ## 📁 主要改动
 
 相较于原版，本分支主要修改了以下文件以适配本地环境：
-- `paper2slides/rag/config.py`: 增加了对 Ollama 及多模型配置的支持。
-- `paper2slides/utils/llm.py`: 新增统一的 LLM 客户端工厂。
-- `paper2slides/generator/image_generator.py`: 新增 HTML 降级生成逻辑。
-- `scripts/setup_ollama.py`: 新增交互式配置脚本。
+
+-   **多语言支持**：增加了 `--language` 参数，允许在生成过程中直接翻译内容（例如：从英文论文生成中文幻灯片）。
+-   **稳健性优化**：将内容规划分解为“大纲 -> 详细内容”两步走，显著提升了小模型（如 Qwen 4B）的稳定性。
+-   `paper2slides/rag/config.py`: 增加了对 Ollama 及多模型配置的支持。
+-   `paper2slides/utils/llm.py`: 新增统一的 LLM 客户端工厂。
+-   `paper2slides/generator/image_generator.py`: 新增 HTML 降级生成逻辑。
+-   `scripts/setup_ollama.py`: 新增交互式配置脚本。
 
 ---
 

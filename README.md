@@ -83,8 +83,11 @@ IMAGE_GEN_BASE_URL=
 ### 3. Run
 
 ```bash
-# Generate HTML Slides
+# Generate HTML Slides in English (default)
 python -m paper2slides --input paper.pdf --output slides
+
+# Generate Slides in Chinese (auto-translation)
+python -m paper2slides --input paper.pdf --output slides --language "Chinese"
 ```
 
 ---
@@ -92,10 +95,13 @@ python -m paper2slides --input paper.pdf --output slides
 ## 📁 Key Changes
 
 Compared to upstream, this fork mainly modified:
-- `paper2slides/rag/config.py`: Added support for Ollama and multi-model config.
-- `paper2slides/utils/llm.py`: Added unified LLM client factory.
-- `paper2slides/generator/image_generator.py`: Added HTML fallback logic.
-- `scripts/setup_ollama.py`: Added interactive setup script.
+
+-   **Multi-Language Support**: Added `--language` argument to translate content directly during generation (e.g., generate Chinese slides from English papers).
+-   **Robust Planning**: Decomposed content generation into "Outline -> Content" steps to improve stability on smaller models (e.g., Qwen 4B).
+-   `paper2slides/rag/config.py`: Added support for Ollama and multi-model config.
+-   `paper2slides/utils/llm.py`: Added unified LLM client factory.
+-   `paper2slides/generator/image_generator.py`: Added HTML fallback logic.
+-   `scripts/setup_ollama.py`: Added interactive setup script.
 
 ---
 
