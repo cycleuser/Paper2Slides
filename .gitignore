@@ -62,3 +62,4 @@ outputs/
 debug.*
 test.*
 /.trae
+/samples
