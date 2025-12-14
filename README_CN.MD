@@ -1,19 +1,11 @@
-<div align="center">
-
-<img src="assets/paper2slides_logo.png" alt="Paper2Slides Logo" width="200"/><br>
-
 # Paper2Slides: 一键从论文生成演示文稿
 
 [![Python](https://img.shields.io/badge/Python-3.12+-FCE7D6.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/License-MIT-C1E5F5.svg)](https://opensource.org/licenses/MIT/)
-[![Feishu](https://img.shields.io/badge/Feishu-Group-E9DBFC?style=flat&logo=wechat&logoColor=white)](./COMMUNICATION.md) 
-[![WeChat](https://img.shields.io/badge/WeChat-Group-C5EAB4?style=flat&logo=wechat&logoColor=white)](./COMMUNICATION.md)
 
 ✨ **从此告别从零制作 PPT** ✨
 
 | 📄 **通用文档支持** &nbsp;|&nbsp; 🎯 **RAG 增强精准度** &nbsp;|&nbsp; 🤖 **本地模型支持 (Ollama)** &nbsp;|&nbsp; 🎨 **自定义风格** |
-
-</div>
 
 ---
 
@@ -21,58 +13,31 @@
 
 Paper2Slides 能够在几分钟内将您的**研究论文**、**报告**和**文档**转化为**专业级的幻灯片 (Slides) 和海报 (Poster)**。
 
+### ⚠️ 本地模型使用提示
+
+本项目支持通过 **Ollama** 运行本地模型（如 Llama3, Qwen2 等），这提供了极佳的隐私保护且完全免费。但请注意：
+
+1.  **生成效果差异**：本地小参数模型（如 7B/8B 版本）在逻辑推理、长文本总结和指令遵循能力上，可能不如 GPT-4o 等商业闭源模型。您可能会遇到幻灯片逻辑稍显简单或排版不够精美的情况。
+2.  **视觉生成限制**：Ollama 目前主要专注于文本和多模态理解，**不具备直接生成高质量幻灯片图片的能力**。
+    - 当未配置外部绘图 API (如 DALL-E) 时，系统会自动切换到 **HTML 降级模式**。
+    - 该模式下，系统会生成包含文字和原论文配图的 HTML 幻灯片，而非 AI 绘制的图片。
+
 ### ✨ 核心特性
 
-- 🤖 **全面支持本地大模型 (Ollama)** <span style="color:red">**NEW**</span><br>
+- 🤖 **全面支持本地大模型 (Ollama)**
   原生支持 Ollama，利用本地 LLM (Llama3, Qwen2 等) 处理文本，视觉模型 (LLaVA) 处理图表，嵌入模型 (Nomic) 处理检索，实现数据完全私有化运行。
 
-- 📄 **通用文档支持**<br>
+- 📄 **通用文档支持**
   无缝处理 PDF、Word、Excel、PowerPoint、Markdown 等多种格式。
   
-- 🎯 **深度内容提取**<br>
+- 🎯 **深度内容提取**
   基于 RAG (检索增强生成) 技术，精准捕获每一个关键观点、数据和图表。
   
-- 🔗 **源文溯源**<br>
+- 🔗 **源文溯源**
   生成内容可直接追溯至原文，消除信息偏差。
   
-- 🎨 **自由风格定制**<br>
-  内置专业主题，支持通过自然语言描述自定义视觉风格。
-  
-- ⚡ **极速生成**<br>
+- ⚡ **极速生成**
   支持快速预览模式和并行生成，大幅提升效率。
-
-### ⚡ 一行命令搞定
-
-```bash
-# 使用本地 Ollama 模型生成 Slides
-python -m paper2slides --input paper.pdf --output slides --style doraemon
-```
-
----
-
-## 🔥 最新动态
-
-- **[2025.12.14]** 🎉 **重磅更新：全面支持 Ollama 本地模型！** 
-  - 新增多模型协作架构（主模型 + 视觉模型 + 嵌入模型）。
-  - 新增交互式配置脚本 `scripts/setup_ollama.py`，一键检测并配置本地模型。
-- **[2025.12.09]** 新增并行幻灯片生成功能 (`--parallel`)。
-- **[2025.12.08]** Paper2Slides 正式开源！
-
----
-
-## 🎨 风格展示
-
-<div align="center">
-
-<table>
-<tr>
-<td align="center" width="290"><img src="assets/doraemon_poster.png?v=2" width="280"/><br/><code>doraemon (哆啦A梦风格)</code></td>
-<td align="center" width="290"><img src="assets/academic_poster.png?v=2" width="280"/><br/><code>academic (学术风格)</code></td>
-<td align="center" width="290"><img src="assets/totoro_poster.png?v=2" width="280"/><br/><code>custom (自定义风格)</code></td>
-</tr>
-</table>
-
-</div>
 
 ---
 
@@ -128,6 +93,7 @@ RAG_LLM_BASE_URL=http://localhost:11434/v1
 RAG_LLM_API_KEY=ollama
 
 # Image Generation (OpenRouter / OpenAI)
+# 留空将使用 HTML 降级模式（推荐本地用户）
 IMAGE_GEN_API_KEY=
 IMAGE_GEN_BASE_URL=
 ```
@@ -143,9 +109,6 @@ python -m paper2slides --input paper.pdf --output poster --style "minimalist blu
 
 # 极速模式 (跳过 RAG 索引，适合短文)
 python -m paper2slides --input paper.pdf --fast
-
-# 开启并行生成 (加速图片渲染)
-python -m paper2slides --input paper.pdf --parallel 4
 ```
 
 ---
@@ -179,7 +142,7 @@ Paper2Slides 包含 4 个核心阶段，确保从输入到输出的高质量转�
 | **1. 🔍 RAG (检索)** | 解析文档，构建向量索引 | `EMBEDDING_MODEL` |
 | **2. 📊 分析 (Analysis)** | 提取文档结构，识别关键图表 | `VISION_MODEL` |
 | **3. 📋 规划 (Planning)** | 规划演示文稿的逻辑流和页面布局 | `LLM_MODEL` |
-| **4. 🎨 创作 (Creation)** | 渲染最终的视觉页面 | 图像生成 API |
+| **4. 🎨 创作 (Creation)** | 渲染最终的视觉页面 | 图像生成 API 或 HTML 模板 |
 
 ---
 
