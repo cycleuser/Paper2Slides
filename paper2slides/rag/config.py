@@ -26,6 +26,11 @@ class APIConfig:
     Base URL is optional (defaults to OpenAI official API).
     """
     
+    provider: str = field(
+        default_factory=lambda: os.getenv("LLM_PROVIDER", "ollama")
+    )
+    """Provider: 'openai', 'ollama', 'qwen', etc. Defaults to 'ollama'."""
+
     llm_api_key: str = field(
         default_factory=lambda: os.getenv("RAG_LLM_API_KEY", "")
     )
@@ -37,18 +42,38 @@ class APIConfig:
     """Optional. If None, uses OpenAI official API. Set via RAG_LLM_BASE_URL env var."""
     
     llm_model: str = field(
-        default_factory=lambda: os.getenv("LLM_MODEL", "gpt-4o-mini")
+        default_factory=lambda: os.getenv("LLM_MODEL", "llama3")
     )
     
+    vision_model: str = field(
+        default_factory=lambda: os.getenv("VISION_MODEL", "llava")
+    )
+    """Model used for vision/image analysis tasks."""
+    
     embedding_model: str = field(
-        default_factory=lambda: os.getenv("EMBEDDING_MODEL", "text-embedding-3-large")
+        default_factory=lambda: os.getenv("EMBEDDING_MODEL", "nomic-embed-text")
     )
     embedding_dim: int = field(
-        default_factory=lambda: int(os.getenv("EMBEDDING_DIM", "3072"))
+        default_factory=lambda: int(os.getenv("EMBEDDING_DIM", "768"))
     )
     embedding_max_tokens: int = 8192
     
     def __post_init__(self):
+        # Set defaults for known providers if not specified
+        if self.provider == "ollama":
+            if not self.llm_base_url:
+                self.llm_base_url = "http://localhost:11434/v1"
+            if not self.llm_api_key:
+                self.llm_api_key = "ollama"
+        elif self.provider == "openai":
+            if self.llm_model == "llama3": # Reset to OpenAI default if still on Ollama default
+                 self.llm_model = "gpt-4o-mini"
+            if self.vision_model == "llava":
+                 self.vision_model = "gpt-4o-mini"
+            if self.embedding_model == "nomic-embed-text":
+                 self.embedding_model = "text-embedding-3-large"
+                 self.embedding_dim = 3072
+
         if not self.llm_api_key:
             raise ValueError(
                 "API key is required. Set RAG_LLM_API_KEY environment variable "

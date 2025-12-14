@@ -83,6 +83,9 @@ async def run_generate_stage(base_dir: Path, config_dir: Path, config: Dict) -> 
     # Prepare output directory
     output_subdir = get_output_dir(config_dir)
     output_subdir.mkdir(parents=True, exist_ok=True)
+    # Ensure gen_input knows about the output dir (hack for fallback)
+    gen_input.output_dir = output_subdir
+
     ext_map = {"image/png": ".png", "image/jpeg": ".jpg", "image/webp": ".webp"}
     
     # Save callback: save each image immediately after generation
@@ -97,6 +100,9 @@ async def run_generate_stage(base_dir: Path, config_dir: Path, config: Dict) -> 
     max_workers = config.get("max_workers", 1)
     images = generator.generate(plan, gen_input, max_workers=max_workers, save_callback=save_image_callback)
     logger.info(f"  Generated {len(images)} images")
+    
+    if not images:
+        logger.info("  No images generated (likely fallback mode). Check output directory for HTML.")
     
     # Generate PDF for slides
     output_type = config.get("output_type", "slides")

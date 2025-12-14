@@ -117,15 +117,20 @@ class ContentPlanner:
         base_url: str = None,
         model: str = "gpt-4o",
     ):
-        import os
-        self.api_key = api_key or os.getenv("RAG_LLM_API_KEY", "")
-        self.base_url = base_url or os.getenv("RAG_LLM_BASE_URL")
-        self.model = model
+        from paper2slides.utils.llm import create_llm_client
+        from paper2slides.rag.config import RAGConfig
         
-        kwargs = {"api_key": self.api_key}
-        if self.base_url:
-            kwargs["base_url"] = self.base_url
-        self.client = OpenAI(**kwargs)
+        # If model is default "gpt-4o", try to load from config instead
+        if model == "gpt-4o":
+             try:
+                 config = RAGConfig.from_env()
+                 self.model = config.api.llm_model
+             except Exception:
+                 self.model = model
+        else:
+             self.model = model
+             
+        self.client = create_llm_client(api_key=api_key, base_url=base_url)
     
     def plan(self, gen_input: GenerationInput) -> ContentPlan:
         """Create a content plan from generation input."""

@@ -86,9 +86,16 @@ class ImageGenerator:
         model: str = "google/gemini-3-pro-image-preview",
     ):
         self.api_key = api_key or os.getenv("IMAGE_GEN_API_KEY", "")
-        self.base_url = base_url or os.getenv("IMAGE_GEN_BASE_URL", "https://openrouter.ai/api/v1")
+        # Handle empty string from env var by falling back to default
+        env_url = os.getenv("IMAGE_GEN_BASE_URL", "")
+        self.base_url = base_url or (env_url if env_url else "https://openrouter.ai/api/v1")
         self.model = model
-        self.client = OpenAI(api_key=self.api_key, base_url=self.base_url)
+        
+        # Only initialize client if we have an API key, otherwise we'll use fallback mode
+        if self.api_key:
+            self.client = OpenAI(api_key=self.api_key, base_url=self.base_url)
+        else:
+            self.client = None
     
     def generate(
         self,
@@ -107,12 +114,19 @@ class ImageGenerator:
             save_callback: Optional callback function(generated_image, index, total) called after each image
         
         Returns:
-            List of GeneratedImage (1 for poster, N for slides)
+            List of GeneratedImage (1 for poster, N for slides). Empty list if fallback used.
         """
         figure_images = self._load_figure_images(plan, gen_input.origin.base_path)
         style_name = gen_input.config.style.value
         custom_style = gen_input.config.custom_style
         
+        # Check for fallback mode (No Image Gen API Key)
+        if not self.client:
+            logging.getLogger(__name__).warning("No Image Gen API Key found. Switching to HTML fallback mode.")
+            output_dir = str(Path(gen_input.output_dir).absolute())
+            self._generate_html_slides(plan, style_name, output_dir, figure_images)
+            return []
+
         # Process custom style with LLM if needed
         processed_style = None
         if style_name == "custom" and custom_style:
@@ -130,6 +144,89 @@ class ImageGenerator:
             return result
         else:
             return self._generate_slides(plan, style_name, processed_style, all_sections_md, figure_images, max_workers, save_callback)
+
+    def _generate_html_slides(self, plan: ContentPlan, style_name: str, output_dir: str, figure_images: List[dict]):
+        """Generate HTML presentation as fallback."""
+        html_path = Path(output_dir) / "presentation.html"
+        
+        # Basic CSS for slides
+        css = """
+        body { font-family: sans-serif; margin: 0; padding: 0; background: #f0f0f0; }
+        .slide-container { max-width: 960px; margin: 40px auto; }
+        .slide { 
+            background: white; 
+            width: 960px; height: 540px; 
+            margin_bottom: 40px; 
+            padding: 40px; 
+            box-sizing: border-box; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .slide h2 { color: #333; margin-top: 0; border-bottom: 2px solid #007bff; padding-bottom: 10px; }
+        .content { font-size: 24px; line-height: 1.5; color: #444; flex: 1; }
+        .figures { display: flex; gap: 20px; margin-top: 20px; justify-content: center; }
+        .figure { text-align: center; }
+        .figure img { max-height: 200px; max-width: 100%; border: 1px solid #ddd; }
+        .caption { font-size: 14px; color: #666; margin-top: 5px; }
+        .page-num { position: absolute; bottom: 20px; right: 20px; color: #999; }
+        """
+        
+        slides_html = []
+        for i, section in enumerate(plan.sections):
+            # Process figures for this section
+            section_figures = self._filter_images([section], figure_images)
+            figs_html = ""
+            if section_figures:
+                figs_html = '<div class="figures">'
+                for fig in section_figures:
+                    img_src = f"data:{fig['mime_type']};base64,{fig['base64']}"
+                    figs_html += f"""
+                    <div class="figure">
+                        <img src="{img_src}" alt="{fig.get('caption', '')}">
+                        <div class="caption">{fig.get('caption', '')}</div>
+                    </div>
+                    """
+                figs_html += '</div>'
+            
+            # Convert markdown content to simple HTML (basic replacement)
+            content_html = section.content.replace("\n", "<br>")
+            
+            slide = f"""
+            <div class="slide">
+                <h2>{section.title}</h2>
+                <div class="content">
+                    {content_html}
+                </div>
+                {figs_html}
+                <div class="page-num">{i+1} / {len(plan.sections)}</div>
+            </div>
+            """
+            slides_html.append(slide)
+            
+        full_html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>{plan.sections[0].title if plan.sections else "Presentation"}</title>
+            <style>{css}</style>
+        </head>
+        <body>
+            <div class="slide-container">
+                {''.join(slides_html)}
+            </div>
+        </body>
+        </html>
+        """
+        
+        with open(html_path, "w", encoding="utf-8") as f:
+            f.write(full_html)
+        
+        logging.getLogger(__name__).info(f"Generated HTML presentation at {html_path}")
+
     
     def _generate_poster(self, style_name, processed_style: Optional[ProcessedStyle], sections_md, images) -> List[GeneratedImage]:
         """Generate 1 poster image."""

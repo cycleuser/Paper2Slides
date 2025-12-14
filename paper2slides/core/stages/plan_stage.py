@@ -60,7 +60,11 @@ async def run_plan_stage(base_dir: Path, config_dir: Path, config: Dict) -> Dict
     api_key = os.getenv("RAG_LLM_API_KEY", "")
     base_url = os.getenv("RAG_LLM_BASE_URL")
     
-    planner = ContentPlanner(api_key=api_key, base_url=base_url, model="gpt-4o")
+    from paper2slides.rag.config import RAGConfig
+    rag_config = RAGConfig.from_env()
+    llm_model = rag_config.api.llm_model
+    
+    planner = ContentPlanner(api_key=api_key, base_url=base_url, model=llm_model)
     plan = planner.plan(gen_input)
     
     logger.info(f"  Generated {len(plan.sections)} sections:")

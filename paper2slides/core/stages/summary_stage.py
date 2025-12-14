@@ -14,9 +14,10 @@ logger = logging.getLogger(__name__)
 
 async def run_summary_stage(base_dir: Path, config: Dict) -> Dict:
     """Stage 2: Extract content from RAG results."""
-    from openai import OpenAI
+    from paper2slides.utils.llm import create_llm_client
     from paper2slides.summary import extract_paper, extract_general, extract_tables_and_figures, OriginalElements
     from paper2slides.summary.paper import extract_paper_metadata_from_markdown
+    from paper2slides.rag.config import RAGConfig
     
     rag_data = load_json(get_rag_checkpoint(base_dir, config))
     if not rag_data:
@@ -26,9 +27,9 @@ async def run_summary_stage(base_dir: Path, config: Dict) -> Dict:
     markdown_paths = rag_data.get("markdown_paths", [])
     content_type = rag_data.get("content_type", "paper")
     
-    api_key = os.getenv("RAG_LLM_API_KEY", "")
-    base_url = os.getenv("RAG_LLM_BASE_URL")
-    llm_client = OpenAI(api_key=api_key, base_url=base_url)
+    llm_client = create_llm_client()
+    rag_config = RAGConfig.from_env()
+    llm_model = rag_config.api.llm_model
     
     logger.info(f"Extracting content from indexed documents ({content_type})...")
     
@@ -41,7 +42,7 @@ async def run_summary_stage(base_dir: Path, config: Dict) -> Dict:
             paper_metadata = await extract_paper_metadata_from_markdown(
                 markdown_paths=markdown_paths,
                 llm_client=llm_client,
-                model="gpt-4o-mini",
+                model=llm_model,
                 max_chars_per_file=3000
             )
             
@@ -58,7 +59,7 @@ async def run_summary_stage(base_dir: Path, config: Dict) -> Dict:
         content = await extract_paper(
             rag_results=rag_results,
             llm_client=llm_client,
-            model="gpt-4o-mini",
+            model=llm_model,
             parallel=True,
             max_concurrency=5,
         )
@@ -70,7 +71,7 @@ async def run_summary_stage(base_dir: Path, config: Dict) -> Dict:
         content = await extract_general(
             rag_results=all_results,
             llm_client=llm_client,
-            model="gpt-4o-mini",
+            model=llm_model,
         )
         summary_text = content.content
     

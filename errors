@@ -1,0 +1,36 @@
+(paper2slides) fred@laptop:~/Documents/GitHub/Paper2Slides$ python -m paper2slides --input samples/GeoPyTool.pdf --output slides --length medium
+10:01:01 [INFO] Input: GeoPyTool.pdf (file)
+10:01:01 [INFO] 
+10:01:01 [INFO] Project: GeoPyTool
+10:01:01 [INFO] Base: /home/fred/Documents/GitHub/Paper2Slides/outputs/GeoPyTool/paper
+10:01:01 [INFO] Config: slides_doraemon_medium
+10:01:01 [INFO] Reusing existing checkpoints, starting from: generate
+10:01:01 [INFO] 
+10:01:01 [INFO] Starting from stage: generate
+10:01:01 [INFO] 
+10:01:01 [INFO] ────────────────────────────────────────────────────────────
+10:01:01 [INFO] STAGE: GENERATE
+10:01:01 [INFO] ────────────────────────────────────────────────────────────
+10:01:01 [INFO] Generating images...
+10:01:01 [WARNING] No Image Gen API Key found. Switching to HTML fallback mode.
+10:01:01 [ERROR] Stage failed: 'ContentPlan' object has no attribute 'title'
+Traceback (most recent call last):
+  File "/home/fred/Documents/GitHub/Paper2Slides/paper2slides/core/pipeline.py", line 71, in run_pipeline
+    await run_generate_stage(base_dir, config_dir, config)
+  File "/home/fred/Documents/GitHub/Paper2Slides/paper2slides/core/stages/generate_stage.py", line 101, in run_generate_stage
+    images = generator.generate(plan, gen_input, max_workers=max_workers, save_callback=save_image_callback)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/fred/Documents/GitHub/Paper2Slides/paper2slides/generator/image_generator.py", line 127, in generate
+    self._generate_html_slides(plan, style_name, output_dir, figure_images)
+  File "/home/fred/Documents/GitHub/Paper2Slides/paper2slides/generator/image_generator.py", line 214, in _generate_html_slides
+    <title>{plan.title}</title>
+            ^^^^^^^^^^
+AttributeError: 'ContentPlan' object has no attribute 'title'
+10:01:01 [INFO] 
+10:01:01 [INFO] ────────────────────────────────────────────────────────────
+10:01:01 [INFO] SUMMARY
+10:01:01 [INFO] ────────────────────────────────────────────────────────────
+10:01:01 [INFO]   [✓] rag: completed
+10:01:01 [INFO]   [✓] summary: completed
+10:01:01 [INFO]   [✓] plan: completed
+10:01:01 [INFO]   [✗] generate: failed

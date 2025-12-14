@@ -86,7 +86,7 @@ class RAGClient:
                  messages: Optional[List] = None, **kwargs):
             if messages:
                 return openai_complete_if_cache(
-                    api.llm_model, "",
+                    api.vision_model, "",
                     system_prompt=None, history_messages=[],
                     messages=messages,
                     **api_kwargs,
@@ -94,7 +94,7 @@ class RAGClient:
                 )
             elif image_data:
                 return openai_complete_if_cache(
-                    api.llm_model, "",
+                    api.vision_model, "",
                     system_prompt=None, history_messages=[],
                     messages=[
                         {"role": "system", "content": system_prompt} if system_prompt else None,
