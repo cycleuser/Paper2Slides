@@ -61,3 +61,4 @@ outputs/
 # Temporary and test files
 debug.*
 test.*
+/.trae
