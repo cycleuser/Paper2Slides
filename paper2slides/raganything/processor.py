@@ -827,39 +827,56 @@ class ProcessorMixin:
             f"Generated descriptions for {len(multimodal_data_list)}/{len(multimodal_items)} multimodal items using correct processors"
         )
 
-        # Stage 2: Convert to LightRAG chunks format
-        lightrag_chunks = self._convert_to_lightrag_chunks_type_aware(
-            multimodal_data_list, file_path, doc_id
-        )
+        try:
+            # Stage 2: Convert to LightRAG chunks format
+            lightrag_chunks = self._convert_to_lightrag_chunks_type_aware(
+                multimodal_data_list, file_path, doc_id
+            )
 
-        # Stage 3: Store chunks to LightRAG storage
-        await self._store_chunks_to_lightrag_storage_type_aware(lightrag_chunks)
+            # Stage 3: Store chunks to LightRAG storage
+            await self._store_chunks_to_lightrag_storage_type_aware(lightrag_chunks)
 
-        # Stage 3.5: Store multimodal main entities to entities_vdb and full_entities
-        await self._store_multimodal_main_entities(
-            multimodal_data_list, lightrag_chunks, file_path, doc_id
-        )
+            # Stage 3.5: Store multimodal main entities to entities_vdb and full_entities
+            await self._store_multimodal_main_entities(
+                multimodal_data_list, lightrag_chunks, file_path, doc_id
+            )
 
-        # Track chunk IDs for doc_status update
-        chunk_ids = list(lightrag_chunks.keys())
+            # Track chunk IDs for doc_status update
+            chunk_ids = list(lightrag_chunks.keys())
 
-        # Stage 4: Use LightRAG's batch entity relation extraction
-        chunk_results = await self._batch_extract_entities_lightrag_style_type_aware(
-            lightrag_chunks
-        )
+            # Stage 4: Use LightRAG's batch entity relation extraction
+            chunk_results = await self._batch_extract_entities_lightrag_style_type_aware(
+                lightrag_chunks
+            )
 
-        # Stage 5: Add belongs_to relations (multimodal-specific)
-        enhanced_chunk_results = await self._batch_add_belongs_to_relations_type_aware(
-            chunk_results, multimodal_data_list
-        )
+            # Stage 5: Add belongs_to relations (multimodal-specific)
+            enhanced_chunk_results = await self._batch_add_belongs_to_relations_type_aware(
+                chunk_results, multimodal_data_list
+            )
 
-        # Stage 6: Use LightRAG's batch merge
-        await self._batch_merge_lightrag_style_type_aware(
-            enhanced_chunk_results, file_path, doc_id
-        )
+            # Stage 6: Use LightRAG's batch merge
+            await self._batch_merge_lightrag_style_type_aware(
+                enhanced_chunk_results, file_path, doc_id
+            )
 
-        # Stage 7: Update doc_status with integrated chunks_list
-        await self._update_doc_status_with_chunks_type_aware(doc_id, chunk_ids)
+            # Stage 7: Update doc_status with integrated chunks_list
+            await self._update_doc_status_with_chunks_type_aware(doc_id, chunk_ids)
+        
+        except ValueError as e:
+            error_msg = str(e)
+            if "dimensions" in error_msg and "match exactly" in error_msg:
+                self.logger.critical("EMBEDDING DIMENSION MISMATCH DETECTED!")
+                self.logger.critical("=" * 60)
+                self.logger.critical(f"Error: {error_msg}")
+                self.logger.critical("Your current model's embedding dimension does not match the existing vector database.")
+                self.logger.critical("ACTION REQUIRED: Please delete the output directory for this project to rebuild the index.")
+                self.logger.critical(f"Try running: rm -rf outputs/<your_project_name>")
+                self.logger.critical("=" * 60)
+                # Re-raise with a cleaner message for the UI/CLI
+                raise RuntimeError(
+                    "Embedding dimension mismatch. Please delete the output directory to rebuild the index with the current model."
+                ) from e
+            raise e
 
     def _convert_to_lightrag_chunks_type_aware(
         self, multimodal_data_list: List[Dict[str, Any]], file_path: str, doc_id: str

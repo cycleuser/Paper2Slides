@@ -187,6 +187,11 @@ class RAGClient:
                 **kwargs,
             )
             return {"success": True, "file": file_path, "output_dir": output}
+        except RuntimeError as e:
+            # Handle dimension mismatch specifically
+            if "Embedding dimension mismatch" in str(e):
+                return {"success": False, "error": str(e), "file": file_path, "code": "DIMENSION_MISMATCH"}
+            return {"success": False, "error": str(e), "file": file_path}
         except Exception as e:
             return {"success": False, "error": str(e), "file": file_path}
     

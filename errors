@@ -1,36 +1,138 @@
-(paper2slides) fred@laptop:~/Documents/GitHub/Paper2Slides$ python -m paper2slides --input samples/GeoPyTool.pdf --output slides --length medium
-10:01:01 [INFO] Input: GeoPyTool.pdf (file)
-10:01:01 [INFO] 
-10:01:01 [INFO] Project: GeoPyTool
-10:01:01 [INFO] Base: /home/fred/Documents/GitHub/Paper2Slides/outputs/GeoPyTool/paper
-10:01:01 [INFO] Config: slides_doraemon_medium
-10:01:01 [INFO] Reusing existing checkpoints, starting from: generate
-10:01:01 [INFO] 
-10:01:01 [INFO] Starting from stage: generate
-10:01:01 [INFO] 
-10:01:01 [INFO] ────────────────────────────────────────────────────────────
-10:01:01 [INFO] STAGE: GENERATE
-10:01:01 [INFO] ────────────────────────────────────────────────────────────
-10:01:01 [INFO] Generating images...
-10:01:01 [WARNING] No Image Gen API Key found. Switching to HTML fallback mode.
-10:01:01 [ERROR] Stage failed: 'ContentPlan' object has no attribute 'title'
-Traceback (most recent call last):
-  File "/home/fred/Documents/GitHub/Paper2Slides/paper2slides/core/pipeline.py", line 71, in run_pipeline
-    await run_generate_stage(base_dir, config_dir, config)
-  File "/home/fred/Documents/GitHub/Paper2Slides/paper2slides/core/stages/generate_stage.py", line 101, in run_generate_stage
-    images = generator.generate(plan, gen_input, max_workers=max_workers, save_callback=save_image_callback)
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/fred/Documents/GitHub/Paper2Slides/paper2slides/generator/image_generator.py", line 127, in generate
-    self._generate_html_slides(plan, style_name, output_dir, figure_images)
-  File "/home/fred/Documents/GitHub/Paper2Slides/paper2slides/generator/image_generator.py", line 214, in _generate_html_slides
-    <title>{plan.title}</title>
-            ^^^^^^^^^^
-AttributeError: 'ContentPlan' object has no attribute 'title'
-10:01:01 [INFO] 
-10:01:01 [INFO] ────────────────────────────────────────────────────────────
-10:01:01 [INFO] SUMMARY
-10:01:01 [INFO] ────────────────────────────────────────────────────────────
-10:01:01 [INFO]   [✓] rag: completed
-10:01:01 [INFO]   [✓] summary: completed
-10:01:01 [INFO]   [✓] plan: completed
-10:01:01 [INFO]   [✗] generate: failed
+51 - local output dir is /home/fred/Documents/GitHub/Paper2Slides/outputs/TAS-PF/paper/rag_output/TAS-PF/auto
+14:25:57 [INFO] [MinerU] Command executed successfully
+14:25:57 [INFO] Fixing image paths in /home/fred/Documents/GitHub/Paper2Slides/outputs/TAS-PF/paper/rag_output/TAS-PF/auto/TAS-PF_content_list.json with base directory: /home/fred/Documents/GitHub/Paper2Slides/outputs/TAS-PF/paper/rag_output/TAS-PF/auto
+INFO: Parsing /home/fred/Documents/GitHub/Paper2Slides/samples/TAS-PF.pdf complete! Extracted 143 content blocks
+INFO: Stored parsing result in cache: 98fc8896cb277eca2818e3a84db5135b
+INFO: 
+Content Information:
+INFO: * Total blocks in content_list: 143
+INFO: * Content block types:
+INFO:   - text: 86
+INFO:   - discarded: 45
+INFO:   - table: 2
+INFO:   - image: 3
+INFO:   - equation: 7
+INFO: Content separation complete:
+INFO:   - Text content length: 18204 characters
+INFO:   - Multimodal items count: 57
+INFO:   - Multimodal type distribution: {'discarded': 45, 'table': 2, 'image': 3, 'equation': 7}
+INFO: Setting content source for context-aware multimodal processing...
+INFO: Content source set with format: minerU
+INFO: Content source set with format: minerU
+INFO: Content source set with format: minerU
+INFO: Content source set with format: minerU
+INFO: Content source set for context extraction (format: minerU)
+INFO: Starting text content insertion into LightRAG...
+INFO: Processing 1 document(s)
+INFO: Extracting stage 1/1: TAS-PF.pdf
+INFO: Processing d-id: doc-32f832f473167fa19f811d4f990f00de
+INFO: Embedding func: 8 new workers initialized (Timeouts: Func: 30s, Worker: 60s, Health Check: 75s)
+ERROR: Traceback (most recent call last):
+  File "/home/fred/miniconda3/envs/paper2slides/lib/python3.12/site-packages/lightrag/lightrag.py", line 1830, in process_document
+    await asyncio.gather(*first_stage_tasks)
+  File "/home/fred/miniconda3/envs/paper2slides/lib/python3.12/site-packages/lightrag/kg/nano_vector_db_impl.py", line 131, in upsert
+    results = client.upsert(datas=list_data)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/fred/miniconda3/envs/paper2slides/lib/python3.12/site-packages/nano_vectordb/dbs.py", line 116, in upsert
+    self.__storage["matrix"] = np.vstack([self.__storage["matrix"], new_matrix])
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/fred/miniconda3/envs/paper2slides/lib/python3.12/site-packages/numpy/_core/shape_base.py", line 292, in vstack
+    return _nx.concatenate(arrs, 0, dtype=dtype, casting=casting)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: all the input array dimensions except for the concatenation axis must match exactly, but along dimension 1, the array at index 0 has size 768 and the array at index 1 has size 2560
+
+ERROR: Failed to extract document 1/1: TAS-PF.pdf
+INFO: Enqueued document processing pipeline stopped
+INFO: Text content insertion complete
+INFO: Starting multimodal content processing...
+INFO: Starting to process 57 multimodal content items
+INFO: Multimodal chunk generation progress: 5/57 (8.8%)
+INFO: Multimodal chunk generation progress: 10/57 (17.5%)
+INFO: Multimodal chunk generation progress: 15/57 (26.3%)
+INFO: Multimodal chunk generation progress: 20/57 (35.1%)
+INFO: Multimodal chunk generation progress: 25/57 (43.9%)
+INFO: Multimodal chunk generation progress: 30/57 (52.6%)
+INFO: Multimodal chunk generation progress: 35/57 (61.4%)
+ERROR: Received empty content from OpenAI API
+ERROR: Error parsing image analysis response: Missing required fields in response
+INFO: Multimodal chunk generation progress: 40/57 (70.2%)
+WARNING: Using regex fallback for JSON parsing
+ERROR: Error parsing image analysis response: Missing required fields in response
+INFO: Multimodal chunk generation progress: 45/57 (78.9%)
+WARNING: Using regex fallback for JSON parsing
+ERROR: Error parsing image analysis response: Missing required fields in response
+ERROR: Error parsing table analysis response: Missing required fields in response
+INFO: Multimodal chunk generation progress: 50/57 (87.7%)
+INFO: Multimodal chunk generation progress: 55/57 (96.5%)
+INFO: Multimodal chunk generation progress: 57/57 (100.0%)
+INFO: Generated descriptions for 57/57 multimodal items using correct processors
+ERROR: Error storing chunks to storage: all the input array dimensions except for the concatenation axis must match exactly, but along dimension 1, the array at index 0 has size 768 and the array at index 1 has size 2560
+ERROR: Error in multimodal processing: all the input array dimensions except for the concatenation axis must match exactly, but along dimension 1, the array at index 0 has size 768 and the array at index 1 has size 2560
+WARNING: Falling back to individual multimodal processing
+INFO: Processing item 1/57: discarded content
+ERROR: Error processing discarded content: all the input array dimensions except for the concatenation axis must match exactly, but along dimension 1, the array at index 0 has size 768 and the array at index 1 has size 2560
+ERROR: Error processing multimodal content: not enough values to unpack (expected 3, got 2)
+INFO: Processing item 2/57: discarded content
+ERROR: Error processing discarded content: all the input array dimensions except for the concatenation axis must match exactly, but along dimension 1, the array at index 0 has size 768 and the array at index 1 has size 2560
+ERROR: Error processing multimodal content: not enough values to unpack (expected 3, got 2)
+INFO: Processing item 3/57: discarded content
+ERROR: Error processing discarded content: all the input array dimensions except for the concatenation axis must match exactly, but along dimension 1, the array at index 0 has size 768 and the array at index 1 has size 2560
+ERROR: Error processing multimodal content: not enough values to unpack (expected 3, got 2)
+INFO: Processing item 4/57: discarded content
+ERROR: Error processing discarded content: all the input array dimensions except for the concatenation axis must match exactly, but along dimension 1, the array at index 0 has size 768 and the array at index 1 has size 2560
+ERROR: Error processing multimodal content: not enough values to unpack (expected 3, got 2)
+INFO: Processing item 5/57: discarded content
+ERROR: Error processing discarded content: all the input array dimensions except for the concatenation axis must match exactly, but along dimension 1, the array at index 0 has size 768 and the array at index 1 has size 2560
+ERROR: Error processing multimodal content: not enough values to unpack (expected 3, got 2)
+INFO: Processing item 6/57: discarded content
+ERROR: Error processing discarded content: all the input array dimensions except for the concatenation axis must match exactly, but along dimension 1, the array at index 0 has size 768 and the array at index 1 has size 2560
+ERROR: Error processing multimodal content: not enough values to unpack (expected 3, got 2)
+INFO: Processing item 7/57: discarded content
+ERROR: Error processing discarded content: all the input array dimensions except for the concatenation axis must match exactly, but along dimension 1, the array at index 0 has size 768 and the array at index 1 has size 2560
+ERROR: Error processing multimodal content: not enough values to unpack (expected 3, got 2)
+INFO: Processing item 8/57: discarded content
+ERROR: Error processing discarded content: all the input array dimensions except for the concatenation axis must match exactly, but along dimension 1, the array at index 0 has size 768 and the array at index 1 has size 2560
+ERROR: Error processing multimodal content: not enough values to unpack (expected 3, got 2)
+INFO: Processing item 9/57: discarded content
+ERROR: Error processing discarded content: all the input array dimensions except for the concatenation axis must match exactly, but along dimension 1, the array at index 0 has size 768 and the array at index 1 has size 2560
+ERROR: Error processing multimodal content: not enough values to unpack (expected 3, got 2)
+INFO: Processing item 10/57: discarded content
+ERROR: Error processing discarded content: all the input array dimensions except for the concatenation axis must match exactly, but along dimension 1, the array at index 0 has size 768 and the array at index 1 has size 2560
+ERROR: Error processing multimodal content: not enough values to unpack (expected 3, got 2)
+INFO: Processing item 11/57: discarded content
+ERROR: Error processing discarded content: all the input array dimensions except for the concatenation axis must match exactly, but along dimension 1, the array at index 0 has size 768 and the array at index 1 has size 2560
+ERROR: Error processing multimodal content: not enough values to unpack (expected 3, got 2)
+INFO: Processing item 12/57: discarded content
+ERROR: Error processing discarded content: all the input array dimensions except for the concatenation axis must match exactly, but along dimension 1, the array at index 0 has size 768 and the array at index 1 has size 2560
+ERROR: Error processing multimodal content: not enough values to unpack (expected 3, got 2)
+INFO: Processing item 13/57: discarded content
+ERROR: Error processing discarded content: all the input array dimensions except for the concatenation axis must match exactly, but along dimension 1, the array at index 0 has size 768 and the array at index 1 has size 2560
+ERROR: Error processing multimodal content: not enough values to unpack (expected 3, got 2)
+INFO: Processing item 14/57: discarded content
+ERROR: Error processing discarded content: all the input array dimensions except for the concatenation axis must match exactly, but along dimension 1, the array at index 0 has size 768 and the array at index 1 has size 2560
+ERROR: Error processing multimodal content: not enough values to unpack (expected 3, got 2)
+INFO: Processing item 15/57: discarded content
+ERROR: Error processing discarded content: all the input array dimensions except for the concatenation axis must match exactly, but along dimension 1, the array at index 0 has size 768 and the array at index 1 has size 2560
+ERROR: Error processing multimodal content: not enough values to unpack (expected 3, got 2)
+INFO: Processing item 16/57: discarded content
+ERROR: Error processing discarded content: all the input array dimensions except for the concatenation axis must match exactly, but along dimension 1, the array at index 0 has size 768 and the array at index 1 has size 2560
+ERROR: Error processing multimodal content: not enough values to unpack (expected 3, got 2)
+INFO: Processing item 17/57: discarded content
+ERROR: Error processing discarded content: all the input array dimensions except for the concatenation axis must match exactly, but along dimension 1, the array at index 0 has size 768 and the array at index 1 has size 2560
+ERROR: Error processing multimodal content: not enough values to unpack (expected 3, got 2)
+INFO: Processing item 18/57: table content
+ERROR: Error processing table content: all the input array dimensions except for the concatenation axis must match exactly, but along dimension 1, the array at index 0 has size 768 and the array at index 1 has size 2560
+ERROR: Error processing multimodal content: not enough values to unpack (expected 3, got 2)
+INFO: Processing item 19/57: discarded content
+ERROR: Error processing discarded content: all the input array dimensions except for the concatenation axis must match exactly, but along dimension 1, the array at index 0 has size 768 and the array at index 1 has size 2560
+ERROR: Error processing multimodal content: not enough values to unpack (expected 3, got 2)
+INFO: Processing item 20/57: discarded content
+ERROR: Error processing discarded content: all the input array dimensions except for the concatenation axis must match exactly, but along dimension 1, the array at index 0 has size 768 and the array at index 1 has size 2560
+ERROR: Error processing multimodal content: not enough values to unpack (expected 3, got 2)
+INFO: Processing item 21/57: discarded content
+ERROR: Error processing discarded content: all the input array dimensions except for the concatenation axis must match exactly, but along dimension 1, the array at index 0 has size 768 and the array at index 1 has size 2560
+ERROR: Error processing multimodal content: not enough values to unpack (expected 3, got 2)
+INFO: Processing item 22/57: discarded content
+ERROR: Error processing discarded content: all the input array dimensions except for the concatenation axis must match exactly, but along dimension 1, the array at index 0 has size 768 and the array at index 1 has size 2560
+ERROR: Error processing multimodal content: not enough values to unpack (expected 3, got 2)
+INFO: Processing item 23/57: image content
