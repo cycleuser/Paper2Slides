@@ -1,56 +1,46 @@
-# Paper2Slides: Generate Presentations from Papers
+# Paper2Slides (Local Edition)
 
 [![Python](https://img.shields.io/badge/Python-3.12+-FCE7D6.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/License-MIT-C1E5F5.svg)](https://opensource.org/licenses/MIT/)
 
-✨ **Stop Creating Slides from Scratch** ✨
-
-| 📄 **Universal Doc Support** &nbsp;|&nbsp; 🎯 **RAG Precision** &nbsp;|&nbsp; 🤖 **Local Model Support (Ollama)** &nbsp;|&nbsp; 🎨 **Custom Styles** |
+> This project is a **customized fork** of [Paper2Slides](https://github.com/HKUDS/Paper2Slides), dedicated to providing **full local model (Ollama) support** for privacy-conscious users.
 
 ---
 
-## 🎯 What is Paper2Slides?
+## 📖 About This Fork
 
-Paper2Slides transforms your **research papers**, **reports**, and **documents** into **professional slides and posters** in minutes.
+The original Paper2Slides is an excellent project capable of generating high-quality presentations using advanced models like GPT-4o. However, many users prefer running the entire pipeline locally to ensure data privacy or avoid API costs.
 
-### ⚠️ Note on Local Models
+**This fork does not significantly enhance the core logic of the original project.** Instead, it focuses on **adaptation**:
 
-This project supports running local models via **Ollama** (e.g., Llama3, Qwen2), offering privacy and free usage. However, please note:
+1.  **Native Ollama Support**: Refactored the underlying LLM calls to directly connect with local Ollama instances.
+2.  **Multi-Model Configuration**: Introduced a granular configuration system, allowing different local models for "Chat", "Vision", and "Embedding" tasks (e.g., Llama3, LLaVA, Nomic).
+3.  **HTML Fallback Mode**: Added an HTML output mode to address the inability of local models to generate high-quality images, ensuring usable slides without DALL-E.
 
-1.  **Generation Quality**: Smaller local models (e.g., 7B/8B) may produce less coherent content or simpler logic compared to large commercial models like GPT-4o.
-2.  **Visual Generation Limitations**: Ollama models primarily focus on text and multimodal understanding. They **cannot generate high-quality slide images directly**.
-    - If no external image generation API (like DALL-E) is configured, the system automatically switches to **HTML Fallback Mode**.
-    - In this mode, it generates HTML slides containing text and original figures from the paper, rather than AI-painted images.
-
-### ✨ Key Features
-
-- 🤖 **Full Local Model Support (Ollama)**
-  Natively supports Ollama, using local LLMs (Llama3, Qwen2) for text, vision models (LLaVA) for charts, and embedding models (Nomic) for RAG, ensuring complete data privacy.
-
-- 📄 **Universal Document Support**
-  Seamlessly handles PDF, Word, Excel, PowerPoint, Markdown, and more.
-  
-- 🎯 **Deep Content Extraction**
-  Uses RAG (Retrieval-Augmented Generation) to accurately capture key insights, data, and figures.
-  
-- 🔗 **Source Traceability**
-  Generated content can be traced back to the original text, eliminating hallucinations.
-  
-- ⚡ **Fast Generation**
-  Supports fast preview mode and parallel processing for efficiency.
+We are deeply grateful to the **HKUDS** team for open-sourcing such a great project. If you prioritize maximum generation quality and don't mind using cloud APIs, we highly recommend using the [Original Paper2Slides](https://github.com/HKUDS/Paper2Slides).
 
 ---
 
-## 🏃 Quick Start
+## ⚠️ Limitations of Local Edition
 
-### 1. Environment Setup
+Compared to GPT-4o, using local models (especially small 7B/8B ones) has objective limitations:
+
+1.  **Reasoning**: Small models may be less rigorous in structuring and summarizing long documents.
+2.  **Visual Generation**: This fork **removes the hard dependency on AI image generation**. If no Image Gen API Key is provided, the system generates **text-based HTML slides** (using original paper figures) instead of attempting AI painting.
+3.  **Speed**: Inference speed depends entirely on your local GPU performance.
+
+---
+
+## 🚀 Quick Start (Ollama)
+
+### 1. Environment
 
 ```bash
-# Clone repository
-git clone https://github.com/HKUDS/Paper2Slides.git
+# Clone this fork
+git clone https://github.com/cycleuser/Paper2Slides.git
 cd Paper2Slides
 
-# Create and activate conda environment
+# Create environment
 conda create -n paper2slides python=3.12 -y
 conda activate paper2slides
 
@@ -58,120 +48,62 @@ conda activate paper2slides
 pip install -r requirements.txt
 ```
 
-### 2. Model Configuration (Recommended)
+### 2. Configure Local Models
 
-Paper2Slides supports **Ollama** (Local), **OpenAI**, and **Qwen** (Aliyun).
-
-We provide an interactive script to help you configure quickly:
+We provide a script to help you generate the config file:
 
 ```bash
-# Run setup wizard (Ensure Ollama is installed and running)
+# Ensure Ollama is running and models are pulled (e.g., llama3, llava, nomic-embed-text)
 python scripts/setup_ollama.py
 ```
 
-This script detects your local Ollama models and guides you to select:
-1. **Main LLM**: For reasoning and text generation (e.g., `llama3`, `qwen2.5`)
-2. **Vision Model**: For understanding figures in papers (e.g., `llava`, `moondream`)
-3. **Embedding Model**: For RAG retrieval (e.g., `nomic-embed-text`)
-
-**Or**, you can manually create `paper2slides/.env` and modify it:
+Or manually create `paper2slides/.env`:
 
 ```bash
-# paper2slides/.env Example (Ollama + Qwen3 Recommendation)
+# paper2slides/.env Recommended (Qwen3 Combo)
 
-# Provider Selection
 LLM_PROVIDER=ollama
-
-# Model Configuration
+# Brain: Reasoning & Writing
 LLM_MODEL=qwen3:4b-instruct
+# Eyes: Vision & Charts
 VISION_MODEL=qwen3-vl:2b
+# Memory: Search & RAG
 EMBEDDING_MODEL=qwen3-embedding:4b
 EMBEDDING_DIM=768
 
-# Connection Settings
+# Connection
 RAG_LLM_BASE_URL=http://localhost:11434/v1
 RAG_LLM_API_KEY=ollama
 
-# Image Generation (OpenRouter / OpenAI)
-# Leave blank to use HTML Fallback Mode (Recommended for local users)
+# Leave blank to use HTML Mode (No AI Painting)
 IMAGE_GEN_API_KEY=
 IMAGE_GEN_BASE_URL=
 ```
 
-### 3. Run Generation
+### 3. Run
 
 ```bash
-# Generate slides (Default)
+# Generate HTML Slides
 python -m paper2slides --input paper.pdf --output slides
-
-# Generate poster (Specific style)
-python -m paper2slides --input paper.pdf --output poster --style "minimalist blue"
-
-# Fast mode (Skip RAG indexing, good for short papers)
-python -m paper2slides --input paper.pdf --fast
 ```
 
 ---
 
-## 🔧 Detailed Configuration
+## 📁 Key Changes
 
-To achieve the best results, Paper2Slides uses a **Multi-Model Collaboration** architecture. You can fine-tune the models in `.env`:
-
-| Config | Role | Recommended (Ollama) | Recommended (OpenAI) |
-|--------|------|----------------------|----------------------|
-| `LLM_MODEL` | **Brain**: Understands text, plans outline, summarizes | `llama3`, `qwen2.5`, `mistral` | `gpt-4o` |
-| `VISION_MODEL` | **Eyes**: Understands figures, charts, and data | `llava`, `llama3.2-vision` | `gpt-4o` |
-| `EMBEDDING_MODEL` | **Memory**: Indexes text for retrieval | `nomic-embed-text`, `mxbai-embed-large` | `text-embedding-3-large` |
-
-### Supported Providers
-
-Switch via `LLM_PROVIDER` in `.env`:
-
-- **`ollama`**: Local private deployment, free and secure. No API Key needed.
-- **`openai`**: Official API, best performance. Requires `RAG_LLM_API_KEY`.
-- **`qwen`**: Aliyun DashScope API, high cost-performance ratio. Requires `RAG_LLM_BASE_URL` and `RAG_LLM_API_KEY`.
-
----
-
-## 🏗️ Architecture
-
-Paper2Slides consists of 4 core stages:
-
-| Stage | Description | Key Tech |
-|-------|-------------|----------|
-| **1. 🔍 RAG** | Parse documents, build vector index | `EMBEDDING_MODEL` |
-| **2. 📊 Analysis** | Extract structure, identify key figures | `VISION_MODEL` |
-| **3. 📋 Planning** | Plan presentation flow and layout | `LLM_MODEL` |
-| **4. 🎨 Creation** | Render final visual pages | Image Gen API or HTML Template |
-
----
-
-## 📁 Project Structure
-
-```
-Paper2Slides/
-├── paper2slides/
-│   ├── core/                 # Core Pipeline
-│   ├── rag/                  # RAG Engine (Config, Client, Query)
-│   ├── generator/            # Content Generation & Planning
-│   ├── summary/              # Content Extraction (Summary, Figures)
-│   └── utils/                # Utilities (Unified LLM Client)
-├── scripts/
-│   └── setup_ollama.py       # Ollama Setup Script
-├── api/                      # Backend API
-└── frontend/                 # React Frontend
-```
+Compared to upstream, this fork mainly modified:
+- `paper2slides/rag/config.py`: Added support for Ollama and multi-model config.
+- `paper2slides/utils/llm.py`: Added unified LLM client factory.
+- `paper2slides/generator/image_generator.py`: Added HTML fallback logic.
+- `scripts/setup_ollama.py`: Added interactive setup script.
 
 ---
 
 ## 🙏 Acknowledgements
 
-This project is built upon:
-- **[LightRAG](https://github.com/HKUDS/LightRAG)**: Graph-Empowered RAG
-- **[RAG-Anything](https://github.com/HKUDS/RAG-Anything)**: Multi-Modal RAG
+Thanks again to the original authors for their outstanding work:
+- **[Paper2Slides (Upstream)](https://github.com/HKUDS/Paper2Slides)**
+- **[LightRAG](https://github.com/HKUDS/LightRAG)**
+- **[RAG-Anything](https://github.com/HKUDS/RAG-Anything)**
 
----
-
-<div align="center">
-❤️ Found this useful? Give us a Star ⭐️!
-</div>
+If this fork helps your local deployment, please consider giving the original project a Star ⭐️.
